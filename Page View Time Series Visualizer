@@ -1,0 +1,120 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def clean_data(df):
+  """
+  Cleans the data by removing outliers (top/bottom 2.5%).
+
+  Args:
+      df: Pandas DataFrame containing page view data.
+
+  Returns:
+      A Pandas DataFrame with outliers removed.
+  """
+
+  q1 = df['page_views'].quantile(0.025)
+  q3 = df['page_views'].quantile(0.975)
+  return df.query('page_views >= @q1 and page_views <= @q3')
+
+def draw_line_plot(df):
+  """
+  Creates a line chart showing daily page views.
+
+  Args:
+      df: Pandas DataFrame containing page view data.
+
+  Returns:
+      A Matplotlib figure object.
+  """
+
+  fig, ax = plt.subplots(figsize=(12, 6))
+  df.plot(kind='line', x='date', y='page_views', ax=ax)
+  ax.set_title('Daily freeCodeCamp Forum Page Views 5/2016-12/2019')
+  ax.set_xlabel('Date')
+  ax.set_ylabel('Page Views')
+  plt.tight_layout()
+  return fig
+
+def draw_bar_plot(df):
+  """
+  Creates a bar chart showing monthly page view averages by year.
+
+  Args:
+      df: Pandas DataFrame containing page view data.
+
+  Returns:
+      A Matplotlib figure object.
+  """
+
+  fig, ax = plt.subplots(figsize=(10, 6))
+  df_monthly_avg = df.resample('M')['page_views'].mean().unstack()
+  df_monthly_avg.plot(kind='bar', ax=ax)
+  plt.legend(title='Months')
+  ax.set_title('Months')
+  ax.set_xlabel('Years')
+  ax.set_ylabel('Average Page Views')
+  plt.tight_layout()
+  return fig
+
+def draw_box_plot(df):
+  """
+  Creates two box plots showing page view distribution by year and month.
+
+  Args:
+      df: Pandas DataFrame containing page view data.
+
+  Returns:
+      A Matplotlib figure object.
+  """
+
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+
+  sns.boxplot(
+      x='year',
+      y='page_views',
+      showmeans=True,
+      data=df.copy(),
+      ax=ax1
+  )
+  ax1.set_title('Year-wise Box Plot (Trend)')
+  ax1.set_xlabel('Year')
+  ax1.set_ylabel('Page Views')
+  plt.xticks(rotation=45)
+
+  sns.boxplot(
+      x='month',
+      y='page_views',
+      showmeans=True,
+      data=df.copy(),
+      ax=ax2
+  )
+  ax2.set_title('Month-wise Box Plot (Seasonality)')
+  ax2.set_xlabel('Month')
+  ax2.set_ylabel('Page Views')
+  plt.xticks(rotation=45)
+  plt.tight_layout()
+  return fig
+
+# Load data (replace with your data path)
+df = pd.read_csv('fcc-forum-pageviews.csv')
+df['date'] = pd.to_datetime(df['date'])
+df.set_index('date', inplace=True)
+
+# Clean data
+df_clean = clean_data(df.copy())
+
+# Line plot
+fig_line = draw_line_plot(df_clean.copy())
+fig_line.savefig('line_plot.png')
+plt.close(fig_line)
+
+# Bar plot
+fig_bar = draw_bar_plot(df_clean.copy())
+fig_bar.savefig('bar_plot.png')
+plt.close(fig_bar)
+
+# Box plot
+fig_box = draw_box_plot(df_clean.copy())
+fig_box.savefig('box_plot.png')
+plt.close(fig_box)
